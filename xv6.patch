@@ -1,0 +1,558 @@
+Only in xv6-public_OLD: bio.d
+Only in xv6-public_OLD: bootasm.d
+Only in xv6-public_OLD: bootblock
+Only in xv6-public_OLD: bootblock.asm
+Only in xv6-public_OLD: bootmain.d
+Only in xv6-public_OLD: _cat
+Only in xv6-public_OLD: cat.asm
+Only in xv6-public_OLD: cat.d
+Only in xv6-public_OLD: cat.sym
+Only in xv6-public_OLD: console.d
+diff -u xv6-public_OLD/defs.h xv6-public/defs.h
+--- xv6-public_OLD/defs.h	2022-02-15 00:38:42.000000000 -0500
++++ xv6-public/defs.h	2022-03-19 00:23:18.991457352 -0400
+@@ -9,6 +9,7 @@
+ struct sleeplock;
+ struct stat;
+ struct superblock;
++struct pstat; // 🔥
+ 
+ // bio.c
+ void            binit(void);
+@@ -120,6 +121,8 @@
+ int             wait(void);
+ void            wakeup(void*);
+ void            yield(void);
++int             getmypinfo(struct pstat*); // 🔥
++int 	        Total_tickets(void); // 🔥
+ 
+ // swtch.S
+ void            swtch(struct context**, struct context*);
+Only in xv6-public_OLD: _echo
+Only in xv6-public_OLD: echo.asm
+Only in xv6-public_OLD: echo.d
+Only in xv6-public_OLD: echo.sym
+Only in xv6-public_OLD: entryother
+Only in xv6-public_OLD: entryother.asm
+Only in xv6-public_OLD: entryother.d
+Only in xv6-public_OLD: exec.d
+Only in xv6-public_OLD: file.d
+Only in xv6-public_OLD: _forktest
+Only in xv6-public_OLD: forktest.asm
+Only in xv6-public_OLD: forktest.d
+Only in xv6-public_OLD: fs.d
+Only in xv6-public_OLD: fs.img
+Only in xv6-public: getmypinfo.c
+Only in xv6-public_OLD: getreadcount.asm
+Only in xv6-public_OLD: getreadcount.d
+Only in xv6-public_OLD: getreadcount.sym
+Common subdirectories: xv6-public_OLD/.git and xv6-public/.git
+Only in xv6-public_OLD: _grep
+Only in xv6-public_OLD: grep.asm
+Only in xv6-public_OLD: grep.d
+Only in xv6-public_OLD: grep.sym
+Only in xv6-public_OLD: ide.d
+Only in xv6-public_OLD: _init
+Only in xv6-public_OLD: init.asm
+Only in xv6-public_OLD: initcode
+Only in xv6-public_OLD: initcode.asm
+Only in xv6-public_OLD: initcode.d
+Only in xv6-public_OLD: initcode.out
+Only in xv6-public_OLD: init.d
+Only in xv6-public_OLD: init.sym
+Only in xv6-public_OLD: ioapic.d
+Only in xv6-public_OLD: kalloc.d
+Only in xv6-public_OLD: kbd.d
+Only in xv6-public_OLD: kernel
+Only in xv6-public_OLD: kernel.asm
+Only in xv6-public_OLD: kernel.sym
+Only in xv6-public_OLD: _kill
+Only in xv6-public_OLD: kill.asm
+Only in xv6-public_OLD: kill.d
+Only in xv6-public_OLD: kill.sym
+Only in xv6-public_OLD: lapic.d
+Only in xv6-public_OLD: _ln
+Only in xv6-public_OLD: ln.asm
+Only in xv6-public_OLD: ln.d
+Only in xv6-public_OLD: ln.sym
+Only in xv6-public_OLD: log.d
+Only in xv6-public: lotterytest.c
+Only in xv6-public_OLD: _ls
+Only in xv6-public_OLD: ls.asm
+Only in xv6-public_OLD: ls.d
+Only in xv6-public_OLD: ls.sym
+Only in xv6-public_OLD: main.d
+diff -u xv6-public_OLD/Makefile xv6-public/Makefile
+--- xv6-public_OLD/Makefile	2022-02-25 16:09:45.000000000 -0500
++++ xv6-public/Makefile	2022-03-18 18:23:42.375152494 -0400
+@@ -27,6 +27,7 @@
+ 	uart.o\
+ 	vectors.o\
+ 	vm.o\
++	rand.o\
+ 
+ # Cross-compiling (e.g., on Mac OS X)
+ # TOOLPREFIX = i386-jos-elf
+@@ -182,6 +183,7 @@
+ 	_wc\
+ 	_zombie\
+ 	_readcount\
++	_lotterytest\
+ 
+ fs.img: mkfs README $(UPROGS)
+ 	./mkfs fs.img README $(UPROGS)
+@@ -218,7 +220,7 @@
+ 	then echo "-gdb tcp::$(GDBPORT)"; \
+ 	else echo "-s -p $(GDBPORT)"; fi)
+ ifndef CPUS
+-CPUS := 2
++CPUS := 1
+ endif
+ QEMUOPTS = -drive file=fs.img,index=1,media=disk,format=raw -drive file=xv6.img,index=0,media=disk,format=raw -smp $(CPUS) -m 512 $(QEMUEXTRA)
+ 
+@@ -250,8 +252,7 @@
+ 
+ EXTRA=\
+ 	mkfs.c ulib.c user.h cat.c echo.c forktest.c grep.c kill.c\
+-	ln.c ls.c mkdir.c rm.c stressfs.c usertests.c wc.c zombie.c\ readcount.c\
+-	printf.c umalloc.c\
++	ln.c ls.c mkdir.c rm.c stressfs.c usertests.c wc.c zombie.c\ readcount.c\ lotterytest.c\ printf.c umalloc.c\
+ 	README dot-bochsrc *.pl toc.* runoff runoff1 runoff.list\
+ 	.gdbinit.tmpl gdbutil\
+ 
+Only in xv6-public_OLD: _mkdir
+Only in xv6-public_OLD: mkdir.asm
+Only in xv6-public_OLD: mkdir.d
+Only in xv6-public_OLD: mkdir.sym
+Only in xv6-public_OLD: mkfs
+Only in xv6-public_OLD: mp.d
+Only in xv6-public_OLD: picirq.d
+Only in xv6-public_OLD: pipe.d
+Only in xv6-public_OLD: printf.d
+diff -u xv6-public_OLD/proc.c xv6-public/proc.c
+--- xv6-public_OLD/proc.c	2022-02-24 22:16:36.000000000 -0500
++++ xv6-public/proc.c	2022-03-19 14:28:45.871831305 -0400
+@@ -6,11 +6,14 @@
+ #include "x86.h"
+ #include "proc.h"
+ #include "spinlock.h"
++#include "rand.h" // 🔥
++#include "pstat.h" // 🔥
+ 
+ struct {
+   struct spinlock lock;
+   struct proc proc[NPROC];
+ } ptable;
++ // originally moved definition from here but Shan told to move it back... 🔥
+ 
+ static struct proc *initproc;
+ 
+@@ -65,6 +68,27 @@
+   return p;
+ }
+ 
++int getmypinfo(struct pstat *ps){ // 🔥
++      acquire(&ptable.lock);
++      struct proc *p;
++    for(p = ptable.proc; p < &ptable.proc[NPROC]; p++) {
++    int i = p-ptable.proc; // calculate index of process
++    if (p->state != UNUSED) {
++        ps->inuse[i] = 1;
++        }
++        
++    else{
++    	ps->inuse[i] = 0;
++    }
++    	 ps->tickets[i] = p->tickets;
++        ps->pid[i] = p->pid;
++        ps->ticks[i] = p->ticks;
++}
++    release(&ptable.lock);
++    return 0;
++}
++
++
+ //PAGEBREAK: 32
+ // Look in the process table for an UNUSED proc.
+ // If found, change state to EMBRYO and initialize
+@@ -87,7 +111,10 @@
+ found:
+   p->state = EMBRYO;
+   p->pid = nextpid++;
+-  p->readcalls = 0;
++  p->readcalls = 0; //⭐
++  p->tickets = 10; // 🔥
++  p->ticks = 0; // 🔥
++  
+   release(&ptable.lock);
+ 
+   // Allocate kernel stack.
+@@ -198,6 +225,10 @@
+   np->sz = curproc->sz;
+   np->parent = curproc;
+   *np->tf = *curproc->tf;
++  
++  //* ADDED TO MAKE CHILDREN PROCCESSES INHERIT THEIR PARENTS TICKET COUNT 🔥
++  np->tickets = curproc->tickets;
++  np->ticks = 0;
+ 
+   // Clear %eax so that fork returns 0 in the child.
+   np->tf->eax = 0;
+@@ -310,6 +341,18 @@
+   }
+ }
+ 
++int Total_tickets(void) // 🔥
++{
++  int total = 0;
++  struct proc *p;
++
++  for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){ // loops through ptable to sum all tickets of the processes so that you can RNG choose the winner
++    if(p->state == RUNNABLE || p->state == RUNNING) total += p->tickets;
++  }
++
++  return total;
++}
++
+ //PAGEBREAK: 42
+ // Per-CPU process scheduler.
+ // Each CPU calls scheduler() after setting itself up.
+@@ -325,29 +368,50 @@
+   struct cpu *c = mycpu();
+   c->proc = 0;
+   
++  
++  int count; // 🔥
++  int winner; // 🔥
++  count = 0; // 🔥
++  winner = 0; // 🔥
++  
+   for(;;){
+     // Enable interrupts on this processor.
+     sti();
+ 
+-    // Loop over process table looking for process to run.
++    
+     acquire(&ptable.lock);
++    
++    count = 0; // 🔥
++    winner = random_at_most(Total_tickets()); // 🔥
++    
++    // Loop over process table looking for process to run.
+     for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
+-      if(p->state != RUNNABLE)
++      if(p->state != RUNNABLE){
+         continue;
+-
++}
++	
++      if ((count + p->tickets) < winner){ // comparing each process to the winner 🔥
++      
++      count += p->tickets; // 🔥
++        continue; // 🔥
++        } // 🔥
++        
+       // Switch to chosen process.  It is the process's job
+       // to release ptable.lock and then reacquire it
+       // before jumping back to us.
+       c->proc = p;
+       switchuvm(p);
+       p->state = RUNNING;
+-
++	// goal to add current ticks with one tick ex. 1000 | 1 | (10ticks)🔥
++	p->ticks++; // case interrupts happen 🔥
+       swtch(&(c->scheduler), p->context);
++      // 🔥 removed inuse from here and added to getmypinfo
+       switchkvm();
+ 
+       // Process is done running for now.
+       // It should have changed its p->state before coming back.
+       c->proc = 0;
++      break; // leave for loop after we found our winner 🔥
+     }
+     release(&ptable.lock);
+ 
+@@ -522,7 +586,8 @@
+       state = states[p->state];
+     else
+       state = "???";
+-    cprintf("%d %s %s", p->pid, state, p->name);
++    cprintf("%d %s %s", p->pid, state, p->name); 
++    // cprintf("%d %s %s Tickets: %d", p->pid, state, p->name, p->tickets); // 🔥
+     if(p->state == SLEEPING){
+       getcallerpcs((uint*)p->context->ebp+2, pc);
+       for(i=0; i<10 && pc[i] != 0; i++)
+@@ -531,3 +596,4 @@
+     cprintf("\n");
+   }
+ }
++
+Only in xv6-public: .proc.c.swp
+Only in xv6-public_OLD: proc.d
+diff -u xv6-public_OLD/proc.h xv6-public/proc.h
+--- xv6-public_OLD/proc.h	2022-02-24 21:50:48.000000000 -0500
++++ xv6-public/proc.h	2022-03-16 22:45:22.281242790 -0400
+@@ -1,3 +1,8 @@
++#ifndef _PROC_H_
++#define _PROC_H_
++
++#include "spinlock.h"
++
+ // Per-CPU state
+ struct cpu {
+   uchar apicid;                // Local APIC ID
+@@ -49,7 +54,12 @@
+   struct file *ofile[NOFILE];  // Open files
+   struct inode *cwd;           // Current directory
+   char name[16];               // Process name (debugging)
+-  int readcalls; // # of times read is called by kernel at boot
++  
++  int readcalls; // # of times read is called by kernel at boot ⭐
++  int ticks; // # of ticks each process gains 🔥
++  int tickets; // # of tickets each process receives 🔥
++  int inuse; // Whether its being run on the CPU currently 🔥
++  
+ };
+ 
+ // Process memory is laid out contiguously, low addresses first:
+@@ -57,3 +67,11 @@
+ //   original data and bss
+ //   fixed-size stack
+ //   expandable heap
++
++//struct ptable_type { // 🔥 moved definition here from proc.c
++//	struct spinlock lock;
++//	struct proc proc[NPROC];
++//} ptable;
++//extern struct ptable_type ptable;
++
++#endif // _PROC_H_
+Common subdirectories: xv6-public_OLD/Programs and xv6-public/Programs
+Only in xv6-public: pstat.h
+Only in xv6-public: rand.c
+Only in xv6-public: rand.h
+Only in xv6-public_OLD: _readcount
+Only in xv6-public_OLD: readcount.asm
+Only in xv6-public_OLD: readcount.d
+Only in xv6-public_OLD: readcount.sym
+Only in xv6-public_OLD: _rm
+Only in xv6-public_OLD: rm.asm
+Only in xv6-public_OLD: rm.d
+Only in xv6-public_OLD: rm.sym
+Only in xv6-public: s
+Only in xv6-public_OLD: _sh
+Only in xv6-public_OLD: sh.asm
+Only in xv6-public_OLD: sh.d
+Only in xv6-public_OLD: sh.sym
+Only in xv6-public_OLD: sleeplock.d
+Only in xv6-public_OLD: spinlock.d
+diff -u xv6-public_OLD/spinlock.h xv6-public/spinlock.h
+--- xv6-public_OLD/spinlock.h	2022-02-15 00:38:42.000000000 -0500
++++ xv6-public/spinlock.h	2022-03-13 16:28:26.359038014 -0400
+@@ -1,3 +1,6 @@
++#ifndef _SPINLOCK_H_
++#define _SPINLOCK_H_
++
+ // Mutual exclusion lock.
+ struct spinlock {
+   uint locked;       // Is the lock held?
+@@ -9,3 +12,4 @@
+                      // that locked the lock.
+ };
+ 
++#endif
+Only in xv6-public_OLD: _stressfs
+Only in xv6-public_OLD: stressfs.asm
+Only in xv6-public_OLD: stressfs.d
+Only in xv6-public_OLD: stressfs.sym
+Only in xv6-public_OLD: string.d
+diff -u xv6-public_OLD/syscall.c xv6-public/syscall.c
+--- xv6-public_OLD/syscall.c	2022-02-24 22:11:07.000000000 -0500
++++ xv6-public/syscall.c	2022-03-16 18:33:05.726777019 -0400
+@@ -7,7 +7,7 @@
+ #include "x86.h"
+ #include "syscall.h"
+ 
+-int readcount = 0; // global count
++int readcount = 0; // global count ⭐
+ 
+ // User code makes a system call with INT T_SYSCALL.
+ // System call number in %eax.
+@@ -105,7 +105,9 @@
+ extern int sys_wait(void);
+ extern int sys_write(void);
+ extern int sys_uptime(void);
+-extern int sys_getreadcount(void);
++extern int sys_getreadcount(void); // ⭐
++extern int sys_settickets(void); // 🔥
++extern int sys_getpinfo(void); // 🔥
+ 
+ static int (*syscalls[])(void) = {
+ [SYS_fork]    sys_fork,
+@@ -129,11 +131,13 @@
+ [SYS_link]    sys_link,
+ [SYS_mkdir]   sys_mkdir,
+ [SYS_close]   sys_close,
+-[SYS_getreadcount] sys_getreadcount,
++[SYS_getreadcount] sys_getreadcount, // ⭐
++[SYS_settickets] sys_settickets, // 🔥
++[SYS_getpinfo] sys_getpinfo, // 🔥
+ };
+ 
+ void
+-syscall(void)
++syscall(void) // ⭐
+ {
+   int num;
+   struct proc *curproc = myproc();
+Only in xv6-public_OLD: syscall.d
+diff -u xv6-public_OLD/syscall.h xv6-public/syscall.h
+--- xv6-public_OLD/syscall.h	2022-02-23 19:52:37.000000000 -0500
++++ xv6-public/syscall.h	2022-03-13 17:34:04.536776237 -0400
+@@ -20,4 +20,6 @@
+ #define SYS_link   19
+ #define SYS_mkdir  20
+ #define SYS_close  21
+-#define SYS_getreadcount 22
++#define SYS_getreadcount 22 // ⭐
++#define SYS_settickets 23 // 🔥
++#define SYS_getpinfo 24 // 🔥
+diff -u xv6-public_OLD/sysfile.c xv6-public/sysfile.c
+--- xv6-public_OLD/sysfile.c	2022-02-15 00:38:42.000000000 -0500
++++ xv6-public/sysfile.c	2022-03-16 17:52:28.609640173 -0400
+@@ -85,7 +85,7 @@
+   int n;
+   char *p;
+ 
+-  if(argfd(0, 0, &f) < 0 || argint(2, &n) < 0 || argptr(1, &p, n) < 0)
++  if(argfd(0, 0, &f) < 0 || argint(2, &n) < 0 || argptr(1, &p, n) < 0) /// position data size
+     return -1;
+   return filewrite(f, p, n);
+ }
+Only in xv6-public_OLD: sysfile.d
+diff -u xv6-public_OLD/sysproc.c xv6-public/sysproc.c
+--- xv6-public_OLD/sysproc.c	2022-02-24 21:57:07.000000000 -0500
++++ xv6-public/sysproc.c	2022-03-18 19:40:07.217158632 -0400
+@@ -5,7 +5,7 @@
+ #include "param.h"
+ #include "memlayout.h"
+ #include "mmu.h"
+-#include "proc.h"
++#include "proc.h" // 🔥
+ 
+ int
+ sys_fork(void)
+@@ -79,8 +79,7 @@
+ 
+ // return how many clock tick interrupts have occurred
+ // since start.
+-int
+-sys_uptime(void)
++int sys_uptime(void)
+ {
+   uint xticks;
+ 
+@@ -90,12 +89,39 @@
+   return xticks;
+ }
+ 
+-// first hw assignment
++// ⭐ first hw assignment ⭐
+ // returns how many times that the read() system call has been called by user processes since the time that the kernel was booted.
+ 
+-int 
+-sys_getreadcount(void) 
++int sys_getreadcount(void) // ⭐ 
+ {
+ 
+ return myproc()->readcalls;
+-} 
++}
++
++// 🔥 second hw assignment 🔥
++
++//function to set the tickets for the lottery test
++//calling this routine makes it such that a process can raise the number of tickets it receives, and thus receive a higher proportion of CPU cycles. This routine should return 0 if successful, and -1 otherwise
++
++int sys_settickets(void) { // 🔥
++    int x;
++    //struct pstat* ps;
++
++    if(argint(0, &x) < 0)
++        return -1;
++
++    //acquire(&ptable.lock); 🔥 removed because you can't access table in here without .h that causes errors
++    myproc()->tickets = x;
++    //release(&ptable.lock); 🔥 removed because you can't access table in here .h that causes errors
++    return 0;
++}
++
++ // This routine returns some information about all running processes, including how many times each has been chosen to run and the process ID of each, and save them in the pstat structure in the parameters list. You can use this system call to build a variant of the command line program ps, which can then be called to see what is going on
++int sys_getpinfo(void) { // 🔥
++    struct pstat* procstaterino;
++	if(argptr(0, (char**)&procstaterino, sizeof(procstaterino) < 0)){ // fail check
++	return -1;
++	}
++	getmypinfo(procstaterino);
++return 0;
++}
+Only in xv6-public: .sysproc.c.swn
+Only in xv6-public: .sysproc.c.swo
+Only in xv6-public_OLD: sysproc.d
+Only in xv6-public: test.c
+Only in xv6-public_OLD: trap.d
+Only in xv6-public_OLD: uart.d
+Only in xv6-public_OLD: ulib.d
+Only in xv6-public_OLD: umalloc.d
+diff -u xv6-public_OLD/user.h xv6-public/user.h
+--- xv6-public_OLD/user.h	2022-02-23 20:08:20.000000000 -0500
++++ xv6-public/user.h	2022-03-18 19:35:38.939543708 -0400
+@@ -1,6 +1,10 @@
++
++#include "pstat.h" // 🔥
++
+ struct stat;
+ struct rtcdate;
+ 
++
+ // system calls
+ int fork(void);
+ int exit(void) __attribute__((noreturn));
+@@ -23,7 +27,9 @@
+ char* sbrk(int);
+ int sleep(int);
+ int uptime(void);
+-int getreadcount(void);
++int getreadcount(void); // ⭐
++int settickets(int); // 🔥
++int getpinfo(struct pstat *); // 🔥
+ 
+ // ulib.c
+ int stat(const char*, struct stat*);
+Only in xv6-public_OLD: _usertests
+Only in xv6-public_OLD: usertests.asm
+Only in xv6-public_OLD: usertests.d
+Only in xv6-public_OLD: usertests.sym
+diff -u xv6-public_OLD/usys.S xv6-public/usys.S
+--- xv6-public_OLD/usys.S	2022-02-24 22:53:42.000000000 -0500
++++ xv6-public/usys.S	2022-03-13 17:36:46.195938020 -0400
+@@ -29,4 +29,6 @@
+ SYSCALL(sbrk)
+ SYSCALL(sleep)
+ SYSCALL(uptime)
+-SYSCALL(getreadcount)
++SYSCALL(getreadcount) // ⭐
++SYSCALL(settickets) // 🔥
++SYSCALL(getpinfo) // 🔥
+Only in xv6-public: .usys.swp
+Only in xv6-public_OLD: vectors.S
+Only in xv6-public_OLD: vm.d
+Only in xv6-public_OLD: _wc
+Only in xv6-public_OLD: wc.asm
+Only in xv6-public_OLD: wc.d
+Only in xv6-public_OLD: wc.sym
+Only in xv6-public_OLD: xv6.img
+Only in xv6-public_OLD: _zombie
+Only in xv6-public_OLD: zombie.asm
+Only in xv6-public_OLD: zombie.d
+Only in xv6-public_OLD: zombie.sym
